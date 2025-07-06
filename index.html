@@ -2,17 +2,23 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>🔐 Encrypted Image Gallery</title>
+  <title>🕵️‍♂️ Secure Hacker Image Gallery</title>
   <style>
     body {
-      background: #f0f2f5;
-      font-family: Arial, sans-serif;
+      background: #0f0f0f;
+      color: #00ff99;
+      font-family: monospace, monospace;
       padding: 40px;
       text-align: center;
     }
 
     h1 {
-      color: #333;
+      color: #00ff99;
+      margin-bottom: 10px;
+    }
+
+    p {
+      color: #33ffbb;
     }
 
     .gallery {
@@ -23,11 +29,16 @@
     }
 
     .card {
-      background: #fff;
+      background: #111;
       padding: 10px;
       border-radius: 8px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-      position: relative;
+      box-shadow: 0 0 12px #00ff99;
+      transition: transform 0.2s;
+      cursor: pointer;
+    }
+
+    .card:hover {
+      transform: scale(1.05);
     }
 
     .card img {
@@ -40,68 +51,91 @@
       justify-content: center;
       align-items: center;
       height: 200px;
-      background: #ddd;
+      background: #222;
       border-radius: 4px;
       font-size: 2em;
-      color: #555;
+      color: #00ff99;
     }
 
     input[type="password"] {
       padding: 10px;
       font-size: 1em;
       width: 250px;
-      border: 1px solid #ccc;
+      border: 1px solid #00ff99;
       border-radius: 4px;
+      background: #000;
+      color: #00ff99;
     }
 
     button {
       padding: 10px 20px;
       margin-left: 10px;
       font-size: 1em;
-      background: #007BFF;
-      color: white;
+      background: #00ff99;
+      color: #000;
       border: none;
       border-radius: 4px;
       cursor: pointer;
     }
 
     button:hover {
-      background: #0056b3;
+      background: #00cc77;
+    }
+
+    /* Lightbox overlay */
+    .lightbox {
+      display: none;
+      position: fixed;
+      z-index: 999;
+      top: 0; left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.9);
+      justify-content: center;
+      align-items: center;
+    }
+
+    .lightbox img {
+      max-width: 90%;
+      max-height: 90%;
+      border: 4px solid #00ff99;
+      border-radius: 8px;
+    }
+
+    .lightbox:target {
+      display: flex;
     }
   </style>
 </head>
 <body>
 
-  <h1>🔐 Secure Image Gallery</h1>
-  <p>Enter your password to unlock all images:</p>
+  <h1>🕵️‍♂️ Secure Gallery</h1>
+  <p>Enter your password to decrypt your secret files:</p>
 
-  <input type="password" id="password" placeholder="Master password" />
+  <input type="password" id="password" placeholder="Super secret password" />
   <button onclick="unlockAll()">🔓 Unlock All</button>
 
   <div class="gallery" id="gallery"></div>
+
+  <!-- Lightbox container -->
+  <div id="lightbox" class="lightbox">
+    <img id="lightbox-img" src="" alt="Full View">
+  </div>
 
   <script>
     const gallery = document.getElementById('gallery');
     let files = [];
 
-    // Load manifest dynamically
     async function loadManifest() {
-      try {
-        const response = await fetch('encrypted/manifest.json');
-        if (!response.ok) throw new Error('Failed to load manifest.json');
+      const response = await fetch('encrypted/manifest.json');
+      files = await response.json();
 
-        files = await response.json();
-
-        files.forEach(() => {
-          const card = document.createElement('div');
-          card.className = 'card';
-          card.innerHTML = `<div class="locked">🔒</div>`;
-          gallery.appendChild(card);
-        });
-      } catch (err) {
-        console.error(err);
-        gallery.innerHTML = `<p style="color:red;">Failed to load manifest.</p>`;
-      }
+      files.forEach(() => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `<div class="locked">🔒</div>`;
+        gallery.appendChild(card);
+      });
     }
 
     loadManifest();
@@ -110,7 +144,7 @@
       const password = document.getElementById('password').value;
 
       if (!password) {
-        alert('Please enter your password!');
+        alert('Enter your password!');
         return;
       }
 
@@ -122,14 +156,12 @@
 
         try {
           const response = await fetch(file);
-          if (!response.ok) throw new Error(`Failed to fetch ${file}`);
-
           const buffer = await response.arrayBuffer();
           const data = new Uint8Array(buffer);
 
           const salt = data.slice(0, 16);
           const iv = data.slice(16, 28);
-          const ciphertext = data.slice(28); // includes auth tag!
+          const ciphertext = data.slice(28);
 
           const enc = new TextEncoder();
           const keyMaterial = await window.crypto.subtle.importKey(
@@ -162,14 +194,30 @@
           const blob = new Blob([decrypted]);
           const url = URL.createObjectURL(blob);
 
-          card.innerHTML = `<img src="${url}" alt="Decrypted Image">`;
+          // Click opens lightbox
+          card.innerHTML = `<img src="${url}" alt="Decrypted Image" onclick="openLightbox('${url}')">`;
 
         } catch (e) {
-          console.error(e);
-          card.innerHTML = `<div class="locked">❌</div>`;
+        //   console.error(e);
+          card.innerHTML = `<div class="locked">😈</div>`;
         }
       }
     }
+
+    function openLightbox(imgSrc) {
+      const lightbox = document.getElementById('lightbox');
+      const lightboxImg = document.getElementById('lightbox-img');
+      lightboxImg.src = imgSrc;
+      lightbox.style.display = 'flex';
+    }
+
+    // Click anywhere to close lightbox
+    window.addEventListener('click', function(e) {
+      const lightbox = document.getElementById('lightbox');
+      if (e.target === lightbox) {
+        lightbox.style.display = 'none';
+      }
+    });
   </script>
 
 </body>
