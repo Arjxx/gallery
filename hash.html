@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>🔑 Hash Generator</title>
+  <style>
+    body {
+      background: #0b0b0b;
+      color: #00ff99;
+      font-family: monospace;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 50px;
+    }
+
+    h1 {
+      color: #00ff99;
+    }
+
+    textarea, select, button {
+      margin: 10px;
+      padding: 10px;
+      border: 1px solid #00ff99;
+      background: #000;
+      color: #00ff99;
+      border-radius: 4px;
+      width: 400px;
+    }
+
+    button {
+      cursor: pointer;
+      background: #00ff99;
+      color: #000;
+      font-weight: bold;
+    }
+
+    button:hover {
+      background: #00cc77;
+    }
+
+    pre {
+      margin-top: 20px;
+      background: #000;
+      color: #0f0;
+      padding: 15px;
+      width: 80%;
+      overflow-x: auto;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>🔑 Hash Generator</h1>
+
+  <textarea id="inputText" rows="5" placeholder="Enter text here..."></textarea>
+  <select id="algorithm">
+    <option value="SHA-256">SHA-256</option>
+    <option value="SHA-384">SHA-384</option>
+    <option value="SHA-512">SHA-512</option>
+  </select>
+  <button onclick="generateHash()">⚡ Generate Hash</button>
+
+  <pre id="output">Ready.</pre>
+
+  <script>
+    async function generateHash() {
+      const text = document.getElementById("inputText").value;
+      const algorithm = document.getElementById("algorithm").value;
+      const output = document.getElementById("output");
+
+      if (!text) {
+        output.textContent = "⚠️ Please enter some text.";
+        return;
+      }
+
+      // Encode text to ArrayBuffer
+      const encoder = new TextEncoder();
+      const data = encoder.encode(text);
+
+      try {
+        const hashBuffer = await crypto.subtle.digest(algorithm, data);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        const hashHex = hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
+        output.textContent = `✅ ${algorithm} Hash:\n${hashHex}`;
+      } catch (err) {
+        output.textContent = `❌ Error:\n${err}`;
+      }
+    }
+  </script>
+
+</body>
+</html>
